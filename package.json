@@ -1,20 +1,20 @@
 {
-  "name": "telegram-admin-bot",
+  "name": "teacher-student-bot",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Telegram бот для общения учителей и учеников",
+  "main": "bot.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node bot.js",
     "dev": "nodemon bot.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["telegram", "bot", "education", "teacher", "student"],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
-    "crypto": "^1.0.1",
-    "dotenv": "^16.6.1",
-    "express": "^4.21.2",
-    "node-telegram-bot-api": "^0.66.0",
-    "socket.io": "^4.8.1"
+    "telegraf": "^4.15.6",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }
