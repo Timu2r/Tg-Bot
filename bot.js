@@ -35,15 +35,9 @@ const tempData = {
     questionHistory: new Map(), // Stores question details by messageId for direct reply
 }
 
-// Функция для экранирования Markdown символов
 function escapeMarkdown(text) {
-    if (typeof text !== 'string') {
-        return '';
-    }
-    // Escape all special Markdown v2 characters
-    return text.replace(/([_*\[\]\(\)~`>#+\-=|{}.!\\])/g, '\\$1')
+    return text || ''; // Возвращаем текст как есть или пустую строку
 }
-
 // Функция шифрования (не используется в текущей логике, но оставлена)
 function encryptData(text) {
     const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY)
