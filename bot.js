@@ -35,21 +35,14 @@ const tempData = {
     questionHistory: new Map(),
 }
 
-// Функция для безопасного отображения текста в Markdown
+// Упрощенная функция escapeMarkdown - не экранирует специальные символы
 function escapeMarkdown(text) {
-    if (!text) return ''
-    // Экранируем только те символы, которые могут нарушить разметку Markdown
-    return text.replace(/[_*[\]()~`>#+=|{}.!\\-]/g, '\\$&')
+    if (!text) return '';
+    // Экранируем только символы, которые могут сломать Markdown
+    return text.replace(/[_*[\]()~`>#+-=|{}.!]/g, '\\$&');
 }
 
-// Функция для безопасного отображения текста в code blocks
-function escapeCodeBlock(text) {
-    if (!text) return ''
-    // В code blocks нужно экранировать только backticks
-    return text.replace(/```/g, '\\`\\`\\`')
-}
-
-// Функция шифрования
+// Функции шифрования/дешифрования (оставлены без изменений)
 function encryptData(text) {
     const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY)
     let encrypted = cipher.update(text, 'utf8', 'hex')
@@ -57,7 +50,6 @@ function encryptData(text) {
     return encrypted
 }
 
-// Функция дешифрования
 function decryptData(encryptedText) {
     const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY)
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8')
@@ -126,29 +118,23 @@ bot.start(async ctx => {
     const chatId = ctx.chat.id
 
     if (isAdmin(userId) || isAdmin(chatId)) {
-        await ctx.reply(
+        await ctx.replyWithMarkdown(
             `┌─────────────────────┐\n` +
             `│ 🎓 *Добро пожаловать, учитель!* │\n` +
             `└─────────────────────┘\n\n` +
             `📊 *Панель управления активна*\n\n` +
-            `🆔 *Ваш Chat ID:* \`${chatId}\``,
-            { parse_mode: 'Markdown' }
+            `🆔 *Ваш Chat ID:* \`${chatId}\``
         )
     } else {
-        await ctx.reply(
+        await ctx.replyWithMarkdown(
             `┌─────────────────┐\n` +
             `│ 🌟 *Assalomu alaykum!* 🌟  │\n` +
             `└─────────────────┘\n\n` +
             `📚 *O'qituvchi-O'quvchi Bot*ga xush kelibsiz!\n\n` +
             `🔹 *Savol berish uchun tugmani bosing:*`,
-            {
-                parse_mode: 'Markdown',
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: '✍️ Savol berish', callback_data: 'ask_question' }],
-                    ],
-                },
-            }
+            Markup.inlineKeyboard([
+                [Markup.button.callback('✍️ Savol berish', 'ask_question')],
+            ])
         )
     }
 })
@@ -215,8 +201,7 @@ bot.action(/reply_(\d+)/, async ctx => {
         return
     }
 
-    const questionData = tempData.questionHistory.get(questionId)
-
+    const questionData = tempData.questionHistory.get(questionId);
     if (!questionData) {
         await ctx.answerCbQuery('❌ Вопрос не найден или устарел!', {
             show_alert: true,
@@ -233,19 +218,20 @@ bot.action(/reply_(\d+)/, async ctx => {
         photoId: questionData.photoId,
         videoId: questionData.videoId,
         caption: questionData.caption,
-    })
+    });
 
-    const studentInfo = questionData.studentUsername !== "yo'q"
-        ? `${questionData.studentName} (@${questionData.studentUsername})`
-        : questionData.studentName
+    const studentInfo =
+        questionData.studentUsername !== "yo'q"
+            ? `${questionData.studentName} (@${questionData.studentUsername})`
+            : questionData.studentName
 
-    let questionContent = ''
+    let questionContent = '';
     if (questionData.originalQuestion) {
-        questionContent = `💭 *Вопрос:*\n\`\`\`\n${escapeCodeBlock(questionData.originalQuestion)}\n\`\`\`\n\n`
+        questionContent = `💭 *Вопрос:*\n\`\`\`\n${questionData.originalQuestion}\n\`\`\`\n\n`;
     } else if (questionData.photoId) {
-        questionContent = `🖼️ *Вопрос (фото${questionData.caption ? ' с подписью' : ''}):*\n`
+        questionContent = `🖼️ *Вопрос (фото${questionData.caption ? ' с подписью' : ''}):*\n`;
     } else if (questionData.videoId) {
-        questionContent = `📹 *Вопрос (видео${questionData.caption ? ' с подписью' : ''}):*\n`
+        questionContent = `📹 *Вопрос (видео${questionData.caption ? ' с подписью' : ''}):*\n`;
     }
 
     await ctx.reply(
@@ -274,16 +260,17 @@ bot.action(/cancel_reply_(\d+)/, async ctx => {
 
     const awaitingResponse = tempData.awaitingResponse.get(adminId)
     if (awaitingResponse && awaitingResponse.questionId === questionId) {
-        const studentInfo = awaitingResponse.studentUsername !== "yo'q"
-            ? `${awaitingResponse.studentName} (@${awaitingResponse.studentUsername})`
-            : awaitingResponse.studentName
+        const studentInfo =
+            awaitingResponse.studentUsername !== "yo'q"
+                ? `${awaitingResponse.studentName} (@${awaitingResponse.studentUsername})`
+                : awaitingResponse.studentName
 
-        const baseCaption = `┌─────────────────────┐\n│ 💬 *Новое сообщение* │\n└─────────────────────┘\n\n👤 *От:* ${studentInfo}`
+        const baseCaption = `┌─────────────────────┐\n│ 💬 *Новое сообщение* │\n└─────────────────────┘\n\n👤 *От:* ${studentInfo}`;
 
         if (awaitingResponse.originalQuestion) {
             await ctx.reply(
                 baseCaption +
-                `\n💭 *Сообщение:*\n\`\`\`\n${escapeCodeBlock(awaitingResponse.originalQuestion)}\n\`\`\``,
+                `\n💭 *Сообщение:*\n\`\`\`\n${awaitingResponse.originalQuestion}\n\`\`\``,
                 {
                     parse_mode: 'Markdown',
                     reply_markup: {
@@ -292,7 +279,7 @@ bot.action(/cancel_reply_(\d+)/, async ctx => {
                         ],
                     },
                 }
-            )
+            );
         } else if (awaitingResponse.photoId) {
             await ctx.telegram.sendPhoto(ctx.chat.id, awaitingResponse.photoId, {
                 caption: baseCaption + (awaitingResponse.caption ? `\n\n*Подпись:* ${awaitingResponse.caption}` : ''),
@@ -302,7 +289,7 @@ bot.action(/cancel_reply_(\d+)/, async ctx => {
                         [{ text: '📝 Ответить', callback_data: `reply_${questionId}` }],
                     ],
                 },
-            })
+            });
         } else if (awaitingResponse.videoId) {
             await ctx.telegram.sendVideo(ctx.chat.id, awaitingResponse.videoId, {
                 caption: baseCaption + (awaitingResponse.caption ? `\n\n*Подпись:* ${awaitingResponse.caption}` : ''),
@@ -312,12 +299,12 @@ bot.action(/cancel_reply_(\d+)/, async ctx => {
                         [{ text: '📝 Ответить', callback_data: `reply_${questionId}` }],
                     ],
                 },
-            })
+            });
         }
-        tempData.awaitingResponse.delete(adminId)
-        await ctx.answerCbQuery('❌ Ответ отменён')
+        tempData.awaitingResponse.delete(adminId);
+        await ctx.answerCbQuery('❌ Ответ отменён');
     } else {
-        await ctx.answerCbQuery('❌ Режим ответа не активен или устарел.', { show_alert: true })
+        await ctx.answerCbQuery('❌ Режим ответа не активен или устарел.', { show_alert: true });
     }
 })
 
@@ -383,15 +370,16 @@ bot.on(['text', 'photo', 'video'], async ctx => {
         answered: false,
     }
 
-    tempData.questionHistory.set(questionId, messageData)
+    tempData.questionHistory.set(questionId, messageData);
     tempData.pendingMessages.delete(userId)
 
     let notificationsSent = 0
     let errors = []
 
-    const studentInfo = studentUsername !== "yo'q"
-        ? `${studentName} (@${studentUsername})`
-        : studentName
+    const studentInfo =
+        studentUsername !== "yo'q"
+            ? `${studentName} (@${studentUsername})`
+            : studentName
 
     for (const adminId of ADMIN_IDS) {
         try {
@@ -399,10 +387,10 @@ bot.on(['text', 'photo', 'video'], async ctx => {
                 `┌─────────────────────┐\n` +
                 `│ 💬 *Новое сообщение* │\n` +
                 `└─────────────────────┘\n\n` +
-                `👤 *От:* ${studentInfo}\n`
+                `👤 *От:* ${studentInfo}\n`;
 
             if (messageText) {
-                adminMessageCaption += `💭 *Сообщение:*\n\`\`\`\n${escapeCodeBlock(messageText)}\n\`\`\``
+                adminMessageCaption += `💭 *Сообщение:*\n\`\`\`\n${messageText}\n\`\`\``;
                 await bot.telegram.sendMessage(
                     adminId,
                     adminMessageCaption,
@@ -414,9 +402,9 @@ bot.on(['text', 'photo', 'video'], async ctx => {
                             ],
                         },
                     }
-                )
+                );
             } else if (messagePhoto) {
-                adminMessageCaption += `🖼️ *Фотография:*\n`
+                adminMessageCaption += `🖼️ *Фотография:*\n`;
                 await bot.telegram.sendPhoto(
                     adminId,
                     messagePhoto[messagePhoto.length - 1].file_id,
@@ -429,9 +417,9 @@ bot.on(['text', 'photo', 'video'], async ctx => {
                             ],
                         },
                     }
-                )
+                );
             } else if (messageVideo) {
-                adminMessageCaption += `📹 *Видео:*\n`
+                adminMessageCaption += `📹 *Видео:*\n`;
                 await bot.telegram.sendVideo(
                     adminId,
                     messageVideo.file_id,
@@ -444,7 +432,7 @@ bot.on(['text', 'photo', 'video'], async ctx => {
                             ],
                         },
                     }
-                )
+                );
             }
             notificationsSent++
         } catch (error) {
@@ -458,10 +446,10 @@ bot.on(['text', 'photo', 'video'], async ctx => {
         `│ ✅ *Savolingiz yuborildi!* │\n` +
         `└─────────────────────┘\n\n` +
         `📊 *Qabul qilgan o'qituvchilar:* ${notificationsSent}\n` +
-        `⏰ *Keyingi savol:* Darhol yuborishingiz mumkin.`
+        `⏰ *Keyingi savol:* Darhol yuborishingiz mumkin.`;
 
     if (messageText) {
-        studentConfirmationMessage += `\n\n📤 *Savolingiz:*\n\`\`\`\n${escapeCodeBlock(messageText)}\n\`\`\``
+        studentConfirmationMessage += `\n\n📤 *Savolingiz:*\n\`\`\`\n${messageText}\n\`\`\``;
         await ctx.reply(studentConfirmationMessage, {
             parse_mode: 'Markdown',
             reply_markup: {
@@ -469,9 +457,9 @@ bot.on(['text', 'photo', 'video'], async ctx => {
                     [{ text: '✍️ Yana savol berish', callback_data: 'ask_question' }],
                 ],
             },
-        })
+        });
     } else if (messagePhoto) {
-        studentConfirmationMessage += `\n\n📤 *Savolingiz (фото):*\n`
+        studentConfirmationMessage += `\n\n📤 *Savolingiz (фото):*\n`;
         await ctx.replyWithPhoto(messagePhoto[messagePhoto.length - 1].file_id, {
             caption: studentConfirmationMessage + (messageCaption ? `\n*Подпись:* ${messageCaption}` : ''),
             parse_mode: 'Markdown',
@@ -480,9 +468,9 @@ bot.on(['text', 'photo', 'video'], async ctx => {
                     [{ text: '✍️ Yana savol berish', callback_data: 'ask_question' }],
                 ],
             },
-        })
+        });
     } else if (messageVideo) {
-        studentConfirmationMessage += `\n\n📤 *Savolingiz (видео):*\n`
+        studentConfirmationMessage += `\n\n📤 *Savolingiz (видео):*\n`;
         await ctx.replyWithVideo(messageVideo.file_id, {
             caption: studentConfirmationMessage + (messageCaption ? `\n*Подпись:* ${messageCaption}` : ''),
             parse_mode: 'Markdown',
@@ -491,9 +479,9 @@ bot.on(['text', 'photo', 'video'], async ctx => {
                     [{ text: '✍️ Yana savol berish', callback_data: 'ask_question' }],
                 ],
             },
-        })
+        });
     }
-})
+});
 
 // Обработка ответа учителя
 async function handleTeacherResponse(ctx, awaitingResponse, responseText, responsePhoto, responseVideo, responseCaption) {
@@ -510,80 +498,79 @@ async function handleTeacherResponse(ctx, awaitingResponse, responseText, respon
         let studentMessageContent =
             `┌─────────────────────┐\n` +
             `│ 📨 *Javob keldi!* │\n` +
-            `└─────────────────────┘\n\n`
+            `└─────────────────────┘\n\n`;
 
-        // Добавить информацию об исходном вопросе
         if (originalQuestion) {
-            studentMessageContent += `❓ *Sizning savolingiz:*\n\`\`\`\n${escapeCodeBlock(originalQuestion)}\n\`\`\`\n\n`
+            studentMessageContent += `❓ *Sizning savolingiz:*
+\`\`\`
+${originalQuestion}
+\`\`\`\n\n`;
         } else if (photoId) {
             await bot.telegram.sendPhoto(studentId, photoId, {
                 caption: `❓ *Sizning savolingiz (foto):*${originalCaption ? `\n*Подпись:* ${originalCaption}` : ''}`,
                 parse_mode: 'Markdown',
-            })
+            });
         } else if (videoId) {
             await bot.telegram.sendVideo(studentId, videoId, {
                 caption: `❓ *Sizning savolingiz (video):*${originalCaption ? `\n*Подпись:* ${originalCaption}` : ''}`,
                 parse_mode: 'Markdown',
-            })
+            });
         }
 
-        // Добавить ответ учителя
         if (responseText) {
-            studentMessageContent += `👨‍🏫 *O'qituvchi javobi:*\n\`\`\`\n${escapeCodeBlock(responseText)}\n\`\`\`\n`
+            studentMessageContent += `👨‍🏫 *O'qituvchi javobi:*\n\`\`\`\n${responseText}\n\`\`\`\n`;
         } else if (responsePhoto) {
-            studentMessageContent += `👨‍🏫 *O'qituvchi javobi (foto${responseCaption ? ' с подписью' : ''}):*\n`
+            studentMessageContent += `👨‍🏫 *O'qituvchi javobi (foto${responseCaption ? ' с подписью' : ''}):*\n`;
         } else if (responseVideo) {
-            studentMessageContent += `👨‍🏫 *O'qituvchi javobi (video${responseCaption ? ' с подписью' : ''}):*\n`
+            studentMessageContent += `👨‍🏫 *O'qituvchi javobi (video${responseCaption ? ' с подписью' : ''}):*\n`;
         }
 
         const replyMarkup = {
             inline_keyboard: [
                 [{ text: '✍️ Yana savol berish', callback_data: 'ask_question' }],
             ],
-        }
+        };
 
-        // Отправить ответ ученику
         if (responseText) {
             await bot.telegram.sendMessage(studentId, studentMessageContent.trim(), {
                 parse_mode: 'Markdown',
                 reply_markup: replyMarkup,
-            })
+            });
         } else if (responsePhoto) {
             await bot.telegram.sendPhoto(studentId, responsePhoto[responsePhoto.length - 1].file_id, {
                 caption: studentMessageContent.trim() + (responseCaption ? `\n*Подпись:* ${responseCaption}` : ''),
                 parse_mode: 'Markdown',
                 reply_markup: replyMarkup,
-            })
+            });
         } else if (responseVideo) {
             await bot.telegram.sendVideo(studentId, responseVideo.file_id, {
                 caption: studentMessageContent.trim() + (responseCaption ? `\n*Подпись:* ${responseCaption}` : ''),
                 parse_mode: 'Markdown',
                 reply_markup: replyMarkup,
-            })
+            });
         }
 
-        // Подтверждение учителю
         let adminConfirmationMessage =
             `┌─────────────────────┐\n` +
             `│ ✅ *Ответ отправлен!* │\n` +
             `└─────────────────────┘\n\n` +
-            `👤 *Получатель:* ${awaitingResponse.studentName}${awaitingResponse.studentUsername !== "yo'q" ? ` (@${awaitingResponse.studentUsername})` : ''}\n`
+            `👤 *Получатель:* ${awaitingResponse.studentName}${awaitingResponse.studentUsername !== "yo'q" ? ` (@${awaitingResponse.studentUsername})` : ''}\n`;
 
         if (responseText) {
-            adminConfirmationMessage += `📤 *Ваш ответ:*\n\`\`\`\n${escapeCodeBlock(responseText)}\n\`\`\`\n`
-            await ctx.reply(adminConfirmationMessage.trim(), { parse_mode: 'Markdown' })
+            adminConfirmationMessage += `📤 *Ваш ответ:*\n\`\`\`\n${responseText}\n\`\`\`\n`;
+            await ctx.replyWithMarkdown(adminConfirmationMessage.trim());
         } else if (responsePhoto) {
-            adminConfirmationMessage += `📤 *Ваш ответ (фото):*\n`
+            adminConfirmationMessage += `📤 *Ваш ответ (фото):*\n`;
             await ctx.replyWithPhoto(responsePhoto[responsePhoto.length - 1].file_id, {
                 caption: adminConfirmationMessage.trim() + (responseCaption ? `\n*Подпись:* ${responseCaption}` : ''),
                 parse_mode: 'Markdown',
-            })
+            });
         } else if (responseVideo) {
-            adminConfirmationMessage += `📤 *Ваш ответ (видео):*\n`
+            adminConfirmationMessage += `📤 *Ваш ответ (видео):*\n`;
             await ctx.replyWithVideo(responseVideo.file_id, {
                 caption: adminConfirmationMessage.trim() + (responseCaption ? `\n*Подпись:* ${responseCaption}` : ''),
                 parse_mode: 'Markdown',
-            })
+            });
         }
 
         tempData.awaitingResponse.delete(ctx.from.id)
@@ -599,9 +586,8 @@ async function handleTeacherResponse(ctx, awaitingResponse, responseText, respon
             errorMessage = 'Техническая ошибка при отправке сообщения.'
         }
 
-        await ctx.reply(
-            `❌ *Ошибка отправки!*\n\n${errorMessage}\n\nПопробуйте связаться с учеником другим способом.`,
-            { parse_mode: 'Markdown' }
+        await ctx.replyWithMarkdown(
+            `❌ *Ошибка отправки!*\n\n${errorMessage}\n\nПопробуйте связаться с учеником другим способом.`
         )
 
         tempData.awaitingResponse.delete(ctx.from.id)
