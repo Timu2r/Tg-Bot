@@ -1,0 +1,30 @@
+{
+  "conversations": {
+    "8037250572": [
+      {
+        "id": 1,
+        "question": "Привет",
+        "answer": null,
+        "timestamp": 1752728440603,
+        "answered": false,
+        "answerTimestamp": null
+      }
+    ]
+  },
+  "users": {
+    "8037250572": {
+      "name": ".",
+      "username": "SWAG4_A",
+      "firstSeen": 1752728406036,
+      "lastActive": 1752728440603,
+      "totalQuestions": 1
+    }
+  },
+  "stats": {
+    "totalQuestions": 1,
+    "totalAnswers": 0,
+    "activeUsers": 0,
+    "startTime": 1752728367180
+  },
+  "messageCounter": 1
+}
